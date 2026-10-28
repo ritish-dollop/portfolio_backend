@@ -1,0 +1,67 @@
+name: Deploy Spring Boot
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+env:
+  APP_NAME: portfolio_backend
+  JAR_NAME: portfolio_backend.jar
+  SERVICE_NAME: portfolio_backend
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      REMOTE_PATH: ${{ secrets.REMOTE_PATH }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build Application
+        run: mvn clean package -DskipTests
+
+      - name: Prepare Deployment
+        run: |
+          mkdir deployment
+          cp target/*.jar deployment/${{ env.JAR_NAME }}
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Create Remote Directory
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+          "mkdir -p $REMOTE_PATH"
+
+      - name: Remove Existing Jar
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+          "rm -f $REMOTE_PATH/${{ env.JAR_NAME }}"
+
+      - name: Upload Jar
+        run: |
+          scp -o StrictHostKeyChecking=no \
+          deployment/${{ env.JAR_NAME }} \
+          $SSH_USERNAME@$SSH_HOST:$REMOTE_PATH/
+
+      - name: Restart Service
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+          "sudo systemctl restart ${{ env.SERVICE_NAME }}"
