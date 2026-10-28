@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 public class AdminUserRequest {
 
     @NotBlank(message = ValidationMessageConstants.FULL_NAME_REQUIRED)
-    @Size(max = 50, message = ValidationMessageConstants.FULL_NAME_MAX_100)
+    @Size(max = 100, message = ValidationMessageConstants.FULL_NAME_MAX_100)
     private String fullName;
 
     @NotBlank(message = ValidationMessageConstants.EMAIL_REQUIRED)
