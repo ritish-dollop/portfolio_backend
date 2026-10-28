@@ -16,6 +16,8 @@ public final class ValidationMessageConstants {
     public static final String NEW_PASSWORD_REQUIRED = "New password is required";
     public static final String NEW_PASSWORD_MIN_6 = "New password must be at least 6 characters long";
     public static final String REFRESH_TOKEN_REQUIRED = "Refresh token must not be blank";
+    public static final String OTP_REQUIRED = "OTP is required";
+    public static final String OTP_INVALID_FORMAT = "OTP must be a 6-digit numeric code";
 
     // User / Admin
     public static final String FULL_NAME_REQUIRED = "Full name is required";

@@ -3,6 +3,9 @@ spring:
     name: Portfolio_Backend_Test
   cache:
     type: simple
+  mail:
+    username: ""
+    password: ""
   data:
     redis:
       repositories:
@@ -34,3 +37,12 @@ app:
       enabled: false
   cors:
     allowed-origins: http://localhost:3000
+  socketio:
+    enabled: false
+  notifications:
+    seed-on-startup: false
+  kafka:
+    enabled: false
+
+
+

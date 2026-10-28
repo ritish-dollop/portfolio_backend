@@ -8,6 +8,7 @@ import com.portfolio.exception.ResourceNotFoundException;
 import com.portfolio.mapper.ContactMessageMapper;
 import com.portfolio.repository.ContactMessageRepository;
 import com.portfolio.service.ContactMessageService;
+import com.portfolio.service.NotificationSocketService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,7 @@ public class ContactMessageServiceImpl implements ContactMessageService {
 
     private final ContactMessageRepository contactMessageRepository;
     private final ContactMessageMapper contactMessageMapper;
+    private final NotificationSocketService notificationSocketService;
 
     @Override
     @Transactional
@@ -29,7 +31,16 @@ public class ContactMessageServiceImpl implements ContactMessageService {
         ContactMessage message = contactMessageMapper.toEntity(request);
         ContactMessage saved = contactMessageRepository.save(message);
         log.info("Received new contact message from: {} (ID: {})", saved.getEmail(), saved.getId());
-        return contactMessageMapper.toResponse(saved);
+
+        ContactMessageResponse response = contactMessageMapper.toResponse(saved);
+        try {
+            long unreadCount = contactMessageRepository.countByReadFalse();
+            notificationSocketService.sendContactMessageNotification(response, unreadCount);
+        } catch (Exception e) {
+            log.error("Failed to broadcast contact message notification via Socket.IO: {}", e.getMessage(), e);
+        }
+
+        return response;
     }
 
     @Override
@@ -56,6 +67,14 @@ public class ContactMessageServiceImpl implements ContactMessageService {
         message.setRead(read);
         ContactMessage updated = contactMessageRepository.save(message);
         log.info("Updated read status to {} for message ID: {}", read, id);
+
+        try {
+            long unreadCount = contactMessageRepository.countByReadFalse();
+            notificationSocketService.broadcastUnreadCount(unreadCount);
+        } catch (Exception e) {
+            log.error("Failed to broadcast unread count update: {}", e.getMessage(), e);
+        }
+
         return contactMessageMapper.toResponse(updated);
     }
 
@@ -66,6 +85,13 @@ public class ContactMessageServiceImpl implements ContactMessageService {
                 .orElseThrow(() -> new ResourceNotFoundException("ContactMessage", "id", id));
         contactMessageRepository.delete(message);
         log.info("Deleted contact message with ID: {}", id);
+
+        try {
+            long unreadCount = contactMessageRepository.countByReadFalse();
+            notificationSocketService.broadcastUnreadCount(unreadCount);
+        } catch (Exception e) {
+            log.error("Failed to broadcast unread count after deletion: {}", e.getMessage(), e);
+        }
     }
 
     @Override

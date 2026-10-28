@@ -66,8 +66,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public portfolio endpoints
                         .requestMatchers(ApiConstants.API_PUBLIC_WILDCARD).permitAll()
-                        // Admin authentication login & token refresh endpoints
-                        .requestMatchers(HttpMethod.POST, ApiConstants.API_ADMIN_AUTH_LOGIN, ApiConstants.API_ADMIN_AUTH_REFRESH).permitAll()
+                        // Admin authentication login, token refresh & OTP endpoints
+                        .requestMatchers(HttpMethod.POST,
+                                ApiConstants.API_ADMIN_AUTH_LOGIN,
+                                ApiConstants.API_ADMIN_AUTH_REFRESH,
+                                ApiConstants.API_ADMIN_AUTH_SEND_OTP,
+                                ApiConstants.API_ADMIN_AUTH_LOGIN_WITH_OTP
+                        ).permitAll()
                         // Admin management APIs
                         .requestMatchers(ApiConstants.API_ADMIN_WILDCARD).hasAnyRole(AppConstants.ROLE_ADMIN_NAME)
                         // Default any other request must be authenticated

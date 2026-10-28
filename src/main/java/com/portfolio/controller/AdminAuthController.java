@@ -4,7 +4,9 @@ import com.portfolio.constant.ApiConstants;
 import com.portfolio.constant.AppConstants;
 import com.portfolio.dto.request.AdminPasswordUpdateRequest;
 import com.portfolio.dto.request.LoginRequest;
+import com.portfolio.dto.request.OtpLoginRequest;
 import com.portfolio.dto.request.RefreshTokenRequest;
+import com.portfolio.dto.request.SendOtpRequest;
 import com.portfolio.dto.response.AdminUserResponse;
 import com.portfolio.dto.response.ApiResponse;
 import com.portfolio.dto.response.JwtAuthResponse;
@@ -13,6 +15,7 @@ import com.portfolio.security.AdminPrincipal;
 import com.portfolio.security.CustomUserDetailsService;
 import com.portfolio.security.JwtTokenProvider;
 import com.portfolio.service.AdminUserService;
+import com.portfolio.service.OtpService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +40,7 @@ public class AdminAuthController {
     private final JwtTokenProvider tokenProvider;
     private final AdminUserService adminUserService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final OtpService otpService;
 
     @PostMapping(ApiConstants.LOGIN)
     public ResponseEntity<ApiResponse<JwtAuthResponse>> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -113,5 +117,39 @@ public class AdminAuthController {
             @Valid @RequestBody AdminPasswordUpdateRequest request) {
         adminUserService.updatePassword(principal.getId(), request);
         return ResponseEntity.ok(ApiResponse.success(AppConstants.MSG_PASSWORD_CHANGED_SUCCESS, null));
+    }
+
+    @PostMapping(ApiConstants.SEND_OTP)
+    public ResponseEntity<ApiResponse<Void>> sendOtp(@Valid @RequestBody SendOtpRequest request) {
+        otpService.sendOtp(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("OTP has been sent to your email address", null));
+    }
+
+    @PostMapping(ApiConstants.LOGIN_WITH_OTP)
+    public ResponseEntity<ApiResponse<JwtAuthResponse>> loginWithOtp(@Valid @RequestBody OtpLoginRequest request) {
+        boolean valid = otpService.verifyOtp(request.getEmail(), request.getOtp());
+        if (!valid) {
+            throw new UnauthorizedException("Invalid or expired OTP code");
+        }
+
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getEmail().trim().toLowerCase());
+        if (!userDetails.isEnabled()) {
+            throw new UnauthorizedException("Administrator account is disabled");
+        }
+
+        String accessToken = tokenProvider.generateAccessToken(userDetails);
+        String refreshToken = tokenProvider.generateRefreshToken(userDetails);
+        AdminUserResponse userResponse = adminUserService.findByEmail(request.getEmail().trim().toLowerCase());
+
+        JwtAuthResponse authResponse = JwtAuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .tokenType(AppConstants.TOKEN_TYPE)
+                .expiresIn(tokenProvider.getExpirationInMs())
+                .refreshExpiresIn(tokenProvider.getRefreshExpirationInMs())
+                .user(userResponse)
+                .build();
+
+        return ResponseEntity.ok(ApiResponse.success(AppConstants.MSG_LOGIN_SUCCESS, authResponse));
     }
 }

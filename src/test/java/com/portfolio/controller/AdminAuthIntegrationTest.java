@@ -4,10 +4,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portfolio.constant.ApiConstants;
 import com.portfolio.dto.request.LoginRequest;
+import com.portfolio.dto.request.OtpLoginRequest;
 import com.portfolio.dto.request.RefreshTokenRequest;
+import com.portfolio.dto.request.SendOtpRequest;
 import com.portfolio.entity.AdminUser;
 import com.portfolio.enums.Role;
 import com.portfolio.repository.AdminUserRepository;
+import com.portfolio.service.OtpService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +43,9 @@ class AdminAuthIntegrationTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private OtpService otpService;
 
     private static final String TEST_EMAIL = "admin_auth_test@portfolio.com";
     private static final String TEST_PASSWORD = "Password@123";
@@ -145,6 +151,58 @@ class AdminAuthIntegrationTest {
         // Step 2: Try to access protected admin endpoint using refresh token in Bearer header
         mockMvc.perform(get(ApiConstants.ADMIN_PROFILE + ApiConstants.GET_ADMIN_PROFILE)
                         .header("Authorization", "Bearer " + refreshToken))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Send OTP should return 200 OK for valid admin email")
+    void sendOtp_ShouldSucceed() throws Exception {
+        SendOtpRequest request = SendOtpRequest.builder()
+                .email(TEST_EMAIL)
+                .build();
+
+        mockMvc.perform(post(ApiConstants.API_ADMIN_AUTH_SEND_OTP)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
+    }
+
+    @Test
+    @DisplayName("Login with valid OTP should return access and refresh tokens")
+    void loginWithOtp_ShouldSucceed() throws Exception {
+        // Trigger OTP generation
+        otpService.sendOtp(TEST_EMAIL);
+
+        String validOtp = otpService.getStoredOtpForTesting(TEST_EMAIL);
+        assertThat(validOtp).isNotNull();
+
+        OtpLoginRequest request = OtpLoginRequest.builder()
+                .email(TEST_EMAIL)
+                .otp(validOtp)
+                .build();
+
+        mockMvc.perform(post(ApiConstants.API_ADMIN_AUTH_LOGIN_WITH_OTP)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.refreshToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.user.email").value(TEST_EMAIL));
+    }
+
+    @Test
+    @DisplayName("Login with invalid OTP should return 401 Unauthorized")
+    void loginWithOtp_WithInvalidOtp_ShouldReturn401() throws Exception {
+        OtpLoginRequest request = OtpLoginRequest.builder()
+                .email(TEST_EMAIL)
+                .otp("000000")
+                .build();
+
+        mockMvc.perform(post(ApiConstants.API_ADMIN_AUTH_LOGIN_WITH_OTP)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
     }
 }

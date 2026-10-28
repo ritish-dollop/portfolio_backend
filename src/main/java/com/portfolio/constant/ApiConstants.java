@@ -11,6 +11,8 @@ public final class ApiConstants {
     public static final String API_ADMIN_WILDCARD = "/api/admin/**";
     public static final String API_ADMIN_AUTH_LOGIN = "/api/admin/auth/login";
     public static final String API_ADMIN_AUTH_REFRESH = "/api/admin/auth/refreshToken";
+    public static final String API_ADMIN_AUTH_SEND_OTP = "/api/admin/auth/sendOtp";
+    public static final String API_ADMIN_AUTH_LOGIN_WITH_OTP = "/api/admin/auth/loginWithOtp";
 
     // Admin Controller Base Routes
     public static final String ADMIN_AUTH = "/api/admin/auth";
@@ -24,6 +26,7 @@ public final class ApiConstants {
     public static final String ADMIN_CONTACT_MESSAGES = "/api/admin/contact-messages";
     public static final String ADMIN_SITE_SETTINGS = "/api/admin/site-settings";
     public static final String ADMIN_MEDIA = "/api/admin/media";
+    public static final String ADMIN_NOTIFICATIONS = "/api/admin/notifications";
 
     // Public Controller Base Routes
     public static final String PUBLIC_PROFILE = "/api/public/profile";
@@ -41,6 +44,8 @@ public final class ApiConstants {
     public static final String REFRESH_TOKEN = "/refreshToken";
     public static final String GET_CURRENT_USER = "/getCurrentUser";
     public static final String CHANGE_PASSWORD = "/changePassword";
+    public static final String SEND_OTP = "/sendOtp";
+    public static final String LOGIN_WITH_OTP = "/loginWithOtp";
 
     // Profile Sub-paths
     public static final String GET_ADMIN_PROFILE = "/getAdminProfile";
@@ -114,4 +119,10 @@ public final class ApiConstants {
     // Media Sub-paths
     public static final String UPLOAD_IMAGE = "/uploadImage";
     public static final String DELETE_IMAGE = "/deleteImage";
+
+    // Notifications Sub-paths
+    public static final String GET_SOCKET_STATUS = "/status";
+    public static final String BROADCAST_NOTIFICATION = "/broadcast";
+    public static final String SEED_NOTIFICATIONS = "/seed";
+    public static final String CLEAR_ALL_NOTIFICATIONS = "/clearAll";
 }
