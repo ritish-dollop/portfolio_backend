@@ -6,6 +6,7 @@ import com.portfolio.entity.ContactMessage;
 import com.portfolio.exception.ResourceNotFoundException;
 import com.portfolio.mapper.ContactMessageMapper;
 import com.portfolio.repository.ContactMessageRepository;
+import com.portfolio.service.NotificationSocketService;
 import com.portfolio.service.impl.ContactMessageServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +31,9 @@ class ContactMessageServiceTest {
 
     @Mock
     private ContactMessageRepository contactMessageRepository;
+
+    @Mock
+    private NotificationSocketService notificationSocketService;
 
     @Spy
     private ContactMessageMapper contactMessageMapper = new ContactMessageMapper();
@@ -60,6 +65,7 @@ class ContactMessageServiceTest {
         assertThat(response.getEmail()).isEqualTo("alice@example.com");
         assertThat(response.isRead()).isFalse();
         verify(contactMessageRepository).save(any(ContactMessage.class));
+        verify(notificationSocketService).sendContactMessageNotification(any(ContactMessageResponse.class), any(Long.class));
     }
 
     @Test
@@ -82,6 +88,7 @@ class ContactMessageServiceTest {
         assertThat(response).isNotNull();
         assertThat(message.isRead()).isTrue();
         verify(contactMessageRepository).save(message);
+        verify(notificationSocketService).broadcastUnreadCount(any(Long.class));
     }
 
     @Test

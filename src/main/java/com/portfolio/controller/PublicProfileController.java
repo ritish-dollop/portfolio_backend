@@ -17,7 +17,7 @@ public class PublicProfileController {
 
     private final ProfileService profileService;
 
-    @GetMapping(ApiConstants.GET_PUBLIC_PROFILE)
+    @GetMapping({"", ApiConstants.GET_PUBLIC_PROFILE})
     public ResponseEntity<ApiResponse<ProfileResponse>> getPublicProfile() {
         ProfileResponse response = profileService.getPublicProfile();
         return ResponseEntity.ok(ApiResponse.success(response));
